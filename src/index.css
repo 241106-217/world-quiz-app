@@ -4,13 +4,13 @@ body {
   background-color: #121212;
 }
 
-/* シルエット用のスタイル */
+/* 🏅 未解放の国旗を真っ黒のシルエットにするスタイル */
 .locked-flag {
-  filter: brightness(0) !important; /* 真っ黒にする */
+  filter: brightness(0) !important;
   background-color: #333 !important;
 }
 
-/* グリッドレイアウト（コレクション用） */
+/* 🏅 コレクションをきれいに並べるグリッド（スマホとPCで自動調整） */
 .collection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -18,7 +18,7 @@ body {
   margin-top: 15px;
 }
 
-/* 📱 スマホ用のレスポンシブ調整 */
+/* 📱 スマホ用のレスポンシブ強制調整 */
 @media (max-width: 600px) {
   .quiz-container {
     padding: 12px !important;
