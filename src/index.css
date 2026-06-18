@@ -1,19 +1,31 @@
-/* 全体のベーススタイル */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: #121212;
 }
 
-/* 📱 スマホ用のレスポンシブ調整（画面幅が600px以下のとき） */
+/* シルエット用のスタイル */
+.locked-flag {
+  filter: brightness(0) !important; /* 真っ黒にする */
+  background-color: #333 !important;
+}
+
+/* グリッドレイアウト（コレクション用） */
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+  margin-top: 15px;
+}
+
+/* 📱 スマホ用のレスポンシブ調整 */
 @media (max-width: 600px) {
   .quiz-container {
     padding: 12px !important;
   }
   .app-title {
-    font-size: 22px !important;
+    font-size: 20px !important;
   }
-  /* クイズの選択肢ボタンを縦1列に強制する */
   .choices-grid {
     flex-direction: column !important;
   }
@@ -22,14 +34,8 @@ body {
     width: 100% !important;
     padding: 14px 10px !important;
   }
-  /* 検索結果のカードを少しコンパクトに */
-  .country-card {
-    flex: 0 0 110px !important;
-  }
-  .country-flag-sm {
-    height: 45px !important;
-  }
-  .detail-flag {
-    max-height: 160px !important;
+  .collection-grid {
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    gap: 8px;
   }
 }
