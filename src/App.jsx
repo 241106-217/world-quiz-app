@@ -72,17 +72,9 @@ function App() {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasAnswered, setHasAnswered] = useState(false);
-  
-  // 💡 画面の横幅をリアルタイムで監視するステート（レスポンシブ用）
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
     fetchAllCountryData();
-
-    // 💡 画面サイズが変更されたら横幅を更新するイベントリスナー
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const fetchAllCountryData = async () => {
@@ -163,9 +155,6 @@ function App() {
     country.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 💡 スマホサイズ（480px以下）かどうかの判定判定
-  const isMobile = windowWidth <= 480;
-
   if (isLoading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#121212", color: "#fff" }}>
@@ -175,8 +164,8 @@ function App() {
   }
 
   return (
-    <div style={{ 
-      padding: isMobile ? "12px" : "20px", // スマホなら余白をタイトに
+    <div className="quiz-container" style={{ 
+      padding: "20px", 
       maxWidth: "600px", 
       margin: "0 auto", 
       color: "#fff", 
@@ -184,7 +173,7 @@ function App() {
       minHeight: "100vh",
       boxSizing: "border-box"
     }}>
-      <h1 style={{ fontSize: isMobile ? "22px" : "32px", textAlign: "center" }}>🌍 世界の国々 探索＆クイズ</h1>
+      <h1 className="app-title" style={{ fontSize: "32px", textAlign: "center" }}>🌍 世界の国々 探索＆クイズ</h1>
 
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
         <button 
@@ -198,7 +187,6 @@ function App() {
             borderRadius: "6px",
             cursor: "pointer",
             fontWeight: "bold",
-            fontSize: isMobile ? "14px" : "16px"
           }}
         >
           🔍 国名検索
@@ -214,7 +202,6 @@ function App() {
             borderRadius: "6px",
             cursor: "pointer",
             fontWeight: "bold",
-            fontSize: isMobile ? "14px" : "16px"
           }}
         >
           🏳️ 国旗クイズ
@@ -241,7 +228,7 @@ function App() {
               border: "1px solid #444",
               backgroundColor: "#222",
               color: "#fff",
-              fontSize: "16px" // スマホでの自動ズームを防ぐサイズ
+              fontSize: "16px"
             }}
           />
           <p style={{ fontSize: "14px" }}>検索結果：<strong>{filteredCountries.length}</strong> 件（横にスライド ➔）</p>
@@ -257,9 +244,10 @@ function App() {
             {filteredCountries.slice(0, 15).map((country) => (
               <div 
                 key={country.name}
+                className="country-card"
                 onClick={() => setSelectedCountry(country)}
                 style={{
-                  flex: `0 0 ${isMobile ? "110px" : "140px"}`, // スマホならカードを少し小さく
+                  flex: "0 0 140px", 
                   padding: "10px",
                   borderRadius: "8px",
                   backgroundColor: selectedCountry?.name === country.name ? "#007bff" : "#222",
@@ -271,7 +259,8 @@ function App() {
                 <img 
                   src={country.flag} 
                   alt="" 
-                  style={{ width: "100%", height: isMobile ? "45px" : "60px", objectFit: "contain", backgroundColor: "#f0f0f0", borderRadius: "4px" }} 
+                  className="country-flag-sm"
+                  style={{ width: "100%", height: "60px", objectFit: "contain", backgroundColor: "#f0f0f0", borderRadius: "4px" }} 
                 />
                 <div style={{ fontSize: "12px", marginTop: "8px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", fontWeight: "bold" }}>
                   {country.nameJa}
@@ -282,13 +271,14 @@ function App() {
 
           {selectedCountry && (
             <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "#1e1e1e", border: "1px solid #333", textAlign: "center" }}>
-              <h3 style={{ fontSize: isMobile ? "24px" : "28px", margin: "0 0 5px 0" }}>{selectedCountry.nameJa}</h3>
+              <h3 style={{ fontSize: "28px", margin: "0 0 5px 0" }}>{selectedCountry.nameJa}</h3>
               <p style={{ color: "#888", margin: "0 0 20px 0", fontSize: "14px" }}>{selectedCountry.name}</p>
               
               <img 
                 src={selectedCountry.flag} 
                 alt="国旗" 
-                style={{ width: "100%", maxHeight: isMobile ? "160px" : "220px", objectFit: "contain", backgroundColor: "#f0f0f0", padding: "10px", borderRadius: "8px", marginBottom: "20px" }} 
+                className="detail-flag"
+                style={{ width: "100%", maxHeight: "220px", objectFit: "contain", backgroundColor: "#f0f0f0", padding: "10px", borderRadius: "8px", marginBottom: "20px" }} 
               />
 
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left" }}>
@@ -311,19 +301,20 @@ function App() {
         <div>
           <h2>🏳️ 国旗クイズ (日本語版)</h2>
           <div style={{ textAlign: "center", backgroundColor: "#f0f0f0", padding: "10px", borderRadius: "8px" }}>
-            <img src={quiz.flag} alt="国旗" style={{ maxWidth: "100%", height: isMobile ? "150px" : "200px", objectFit: "contain" }} />
+            <img src={quiz.flag} alt="国旗" className="detail-flag" style={{ maxWidth: "100%", height: "200px", objectFit: "contain" }} />
           </div>
 
-          {/* 💡 スマホなら縦1列(100%)、PCなら横2列(45%)に自動変形 */}
-          <div style={{ marginTop: "20px", display: "flex", gap: "10px", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap" }}>
+          {/* 💡 CSSで制御するためにクラス名 choices-grid を付与 */}
+          <div className="choices-grid" style={{ marginTop: "20px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {choices.map((country) => (
               <button
                 key={country.name}
+                className="choice-button"
                 onClick={() => checkAnswer(country.nameJa)}
                 disabled={hasAnswered}
                 style={{
                   padding: "14px 15px",
-                  flex: isMobile ? "1 1 100%" : "1 1 45%", 
+                  flex: "1 1 45%", 
                   cursor: hasAnswered ? "not-allowed" : "pointer",
                   backgroundColor: "#222",
                   color: "#fff",
@@ -348,12 +339,12 @@ function App() {
               border: "2px solid #007bff",
               textAlign: "center"
             }}>
-              <h3 style={{ margin: "0 0 15px 0", fontSize: isMobile ? "20px" : "24px" }}>{result}</h3>
+              <h3 style={{ margin: "0 0 15px 0" }}>{result}</h3>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "left" }}>
                 <div style={{ background: "#2a2a2a", padding: "10px 15px", borderRadius: "6px", display: "flex" }}>
                   <span style={{ color: "#aaa" }}>🌍 国名:</span>
-                  <strong style={{ marginLeft: "auto", color: "#fff", fontSize: isMobile ? "13px" : "15px" }}>{quiz.nameJa}</strong>
+                  <strong style={{ marginLeft: "auto", color: "#fff" }}>{quiz.nameJa}</strong>
                 </div>
                 <div style={{ background: "#2a2a2a", padding: "10px 15px", borderRadius: "6px", display: "flex" }}>
                   <span style={{ color: "#aaa" }}>🏛️ 首都:</span>
