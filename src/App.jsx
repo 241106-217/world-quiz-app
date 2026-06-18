@@ -71,17 +71,15 @@ function App() {
   const [page, setPage] = useState("search"); 
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasAnswered, setHasAnswered] = useState(false); // 💡 解答したかどうかのフラグ
 
   useEffect(() => {
     fetchAllCountryData();
   }, []);
 
-  // 💡 国旗、首都、人口の3つのAPIデータを並列取得して1つにガッチャンコする関数
   const fetchAllCountryData = async () => {
     try {
       setIsLoading(true);
-      
-      // 3つのエンドポイントを同時に叩く（高速化）
       const [flagRes, capitalRes, populationRes] = await Promise.all([
         fetch("https://countriesnow.space/api/v0.1/countries/flag/images"),
         fetch("https://countriesnow.space/api/v0.1/countries/capital"),
@@ -92,20 +90,15 @@ function App() {
       const capitalData = await capitalRes.json();
       const populationData = await populationRes.json();
 
-      // 国旗データをベースにして、首都と人口をマッピングして合体
       const combined = flagData.data.map(country => {
         const lowerName = country.name.toLowerCase().trim();
-
-        // 1. 首都データの紐付け
         const capObj = capitalData.data.find(c => c.name.toLowerCase().trim() === lowerName);
         const capital = capObj ? capObj.capital : "データなし";
 
-        // 2. 人口データの紐付け (最新年の一番最後のデータを取得)
         const popObj = populationData.data.find(c => c.country.toLowerCase().trim() === lowerName);
         let population = "データなし";
         if (popObj && popObj.populationCounts && popObj.populationCounts.length > 0) {
           const latestPop = popObj.populationCounts[popObj.populationCounts.length - 1];
-          // 数値を「1,234,567人」のようにカンマ区切りにする
           population = `${latestPop.value.toLocaleString()} 人 (${latestPop.year}年)`;
         }
 
@@ -145,13 +138,15 @@ function App() {
     setQuiz(correctCountry);
     setChoices(allChoices);
     setResult("");
+    setHasAnswered(false); // 💡 新しい問題になったらフラグを戻す
   };
 
   const checkAnswer = (selectedNameJa) => {
+    setHasAnswered(true); // 💡 ボタンを押したら解答済みにする
     if (selectedNameJa === quiz.nameJa) {
       setResult("⭕ 正解！");
     } else {
-      setResult(`❌ 不正解！正解は ${quiz.nameJa}`);
+      setResult(`❌ 不正解！正解は 「${quiz.nameJa}」 でした`);
     }
   };
 
@@ -261,9 +256,8 @@ function App() {
             ))}
           </div>
 
-          {/* 💡 拡張された詳細カード表示 */}
           {selectedCountry && (
-            <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "#1e1e1e", border: "1px solid #333", textAlign: "center", animation: "fadeIn 0.3s ease-in-out" }}>
+            <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "#1e1e1e", border: "1px solid #333", textAlign: "center" }}>
               <h3 style={{ fontSize: "28px", margin: "0 0 5px 0" }}>{selectedCountry.nameJa}</h3>
               <p style={{ color: "#888", margin: "0 0 20px 0", fontSize: "14px" }}>{selectedCountry.name}</p>
               
@@ -273,7 +267,6 @@ function App() {
                 style={{ width: "100%", maxHeight: "220px", objectFit: "contain", backgroundColor: "#f0f0f0", padding: "10px", borderRadius: "8px", marginBottom: "20px" }} 
               />
 
-              {/* 🏛️ 首都＆人口のインフォメーションボード */}
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left" }}>
                 <div style={{ background: "#2a2a2a", padding: "12px 15px", borderRadius: "8px", display: "flex", justifyContent: "between", alignItems: "center" }}>
                   <span style={{ color: "#aaa", fontSize: "14px" }}>🏛️ 首都:</span>
@@ -302,17 +295,18 @@ function App() {
               <button
                 key={country.name}
                 onClick={() => checkAnswer(country.nameJa)}
-                disabled={result !== ""}
+                disabled={hasAnswered}
                 style={{
                   padding: "12px 15px",
                   flex: "1 1 45%",
-                  cursor: result !== "" ? "not-allowed" : "pointer",
+                  cursor: hasAnswered ? "not-allowed" : "pointer",
                   backgroundColor: "#222",
                   color: "#fff",
                   border: "1px solid #444",
                   borderRadius: "6px",
                   fontSize: "14px",
-                  fontWeight: "bold"
+                  fontWeight: "bold",
+                  opacity: hasAnswered && country.nameJa !== quiz.nameJa ? 0.4 : 1 // 💡 不正解の選択肢は解答後に薄くする
                 }}
               >
                 {country.nameJa}
@@ -320,14 +314,52 @@ function App() {
             ))}
           </div>
 
-          <h3 style={{ textAlign: "center", margin: "20px 0", fontSize: "22px" }}>{result}</h3>
+          {/* 💡 解答後に表示される動的な「国のミニ解説カード」 */}
+          {hasAnswered && (
+            <div style={{ 
+              marginTop: "25px", 
+              padding: "20px", 
+              borderRadius: "10px", 
+              backgroundColor: "#1e1e1e", 
+              border: "2px solid #007bff",
+              textAlign: "center"
+            }}>
+              <h3 style={{ margin: "0 0 15px 0", fontSize: "24px" }}>{result}</h3>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "left" }}>
+                <div style={{ background: "#2a2a2a", padding: "10px 15px", borderRadius: "6px", display: "flex" }}>
+                  <span style={{ color: "#aaa" }}>🌍 国名:</span>
+                  <strong style={{ marginLeft: "auto", color: "#fff" }}>{quiz.nameJa} ({quiz.name})</strong>
+                </div>
+                <div style={{ background: "#2a2a2a", padding: "10px 15px", borderRadius: "6px", display: "flex" }}>
+                  <span style={{ color: "#aaa" }}>🏛️ 首都:</span>
+                  <strong style={{ marginLeft: "auto", color: "#ffc107" }}>{quiz.capital}</strong>
+                </div>
+                <div style={{ background: "#2a2a2a", padding: "10px 15px", borderRadius: "6px", display: "flex" }}>
+                  <span style={{ color: "#aaa" }}>👥 人口:</span>
+                  <strong style={{ marginLeft: "auto", color: "#28a745" }}>{quiz.population}</strong>
+                </div>
+              </div>
 
-          <button
-            onClick={() => createQuiz()}
-            style={{ padding: "12px", width: "100%", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
-          >
-            次の問題
-          </button>
+              <button
+                onClick={() => createQuiz()}
+                style={{ 
+                  marginTop: "20px", 
+                  padding: "12px", 
+                  width: "100%", 
+                  backgroundColor: "#007bff", 
+                  color: "#fff", 
+                  border: "none", 
+                  borderRadius: "6px", 
+                  cursor: "pointer", 
+                  fontWeight: "bold",
+                  fontSize: "16px"
+                }}
+              >
+                次 の 問 題 ➔
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
