@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-// 💡 APIから飛んでくる可能性のある表記をすべてカバーした辞書
+// 💡 国名日本語化辞書
 const countryTranslation = {
   "afghanistan": "アフガニスタン", "albania": "アルバニア", "algeria": "アルジェリア", "andorra": "アンドラ", "angola": "アンゴラ",
   "anguilla": "アンギラ", "antigua and barbuda": "アンティグア・バーブーダ", "argentina": "アルゼンチン", "armenia": "アルメニア", "aruba": "アルバ",
@@ -50,21 +50,16 @@ const countryTranslation = {
   "zambia": "ザンビア", "zimbabwe": "ジンバブエ"
 };
 
-// 💡 どんな国名が来ても絶対に日本語に変換する安全機能
 const getJapaneseName = (englishName) => {
   if (!englishName) return "不明な国";
   const lower = englishName.toLowerCase().trim();
-  
-  // 1. 辞書に完全一致すればそれを返す
   if (countryTranslation[lower]) return countryTranslation[lower];
-  
-  // 2. 「United States」などの部分一致を救済
+  if (lower.includes("saint vincent")) return "セントビンセント・グレナディーン";
   if (lower.includes("united states")) return "アメリカ";
   if (lower.includes("isle of man")) return "マン島";
   if (lower.includes("united kingdom")) return "イギリス";
   if (lower.includes("russia")) return "ロシア";
-  
-  return englishName; // 最悪のフォールバック
+  return englishName; 
 };
 
 function App() {
@@ -75,31 +70,59 @@ function App() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState("search"); 
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchFlags();
+    fetchAllCountryData();
   }, []);
 
-  const fetchFlags = async () => {
+  // 💡 国旗、首都、人口の3つのAPIデータを並列取得して1つにガッチャンコする関数
+  const fetchAllCountryData = async () => {
     try {
-      const response = await fetch(
-        "https://countriesnow.space/api/v0.1/countries/flag/images"
-      );
-      if (!response.ok) throw new Error("通信エラーが発生しました");
+      setIsLoading(true);
       
-      const data = await response.json();
+      // 3つのエンドポイントを同時に叩く（高速化）
+      const [flagRes, capitalRes, populationRes] = await Promise.all([
+        fetch("https://countriesnow.space/api/v0.1/countries/flag/images"),
+        fetch("https://countriesnow.space/api/v0.1/countries/capital"),
+        fetch("https://countriesnow.space/api/v0.1/countries/population")
+      ]);
 
-      const combinedData = data.data.map(country => {
+      const flagData = await flagRes.json();
+      const capitalData = await capitalRes.json();
+      const populationData = await populationRes.json();
+
+      // 国旗データをベースにして、首都と人口をマッピングして合体
+      const combined = flagData.data.map(country => {
+        const lowerName = country.name.toLowerCase().trim();
+
+        // 1. 首都データの紐付け
+        const capObj = capitalData.data.find(c => c.name.toLowerCase().trim() === lowerName);
+        const capital = capObj ? capObj.capital : "データなし";
+
+        // 2. 人口データの紐付け (最新年の一番最後のデータを取得)
+        const popObj = populationData.data.find(c => c.country.toLowerCase().trim() === lowerName);
+        let population = "データなし";
+        if (popObj && popObj.populationCounts && popObj.populationCounts.length > 0) {
+          const latestPop = popObj.populationCounts[popObj.populationCounts.length - 1];
+          // 数値を「1,234,567人」のようにカンマ区切りにする
+          population = `${latestPop.value.toLocaleString()} 人 (${latestPop.year}年)`;
+        }
+
         return {
           ...country,
-          nameJa: getJapaneseName(country.name) // 💡 安全な変換関数を通す
+          nameJa: getJapaneseName(country.name),
+          capital: capital,
+          population: population
         };
       });
 
-      setFlags(combinedData);
-      createQuiz(combinedData);
+      setFlags(combined);
+      createQuiz(combined);
+      setIsLoading(false);
     } catch (error) {
-      console.error("エラーが発生しました:", error);
+      console.error("データの取得に失敗しました:", error);
+      setIsLoading(false);
     }
   };
 
@@ -114,7 +137,6 @@ function App() {
       flagData.filter((country) => country.name !== correctCountry.name)
     ).slice(0, 3);
     
-    // 💡 選択肢に変わるタイミングでも確実に日本語名を再生成・保証する
     const allChoices = shuffle([correctCountry, ...wrongCountries]).map(c => ({
       ...c,
       nameJa: getJapaneseName(c.name)
@@ -137,6 +159,14 @@ function App() {
     country.nameJa.toLowerCase().includes(search.toLowerCase()) ||
     country.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#121212", color: "#fff" }}>
+        <h2>🌍 世界のデータを読み込み中...</h2>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto", color: "#fff", backgroundColor: "#121212", minHeight: "100vh" }}>
@@ -231,16 +261,29 @@ function App() {
             ))}
           </div>
 
+          {/* 💡 拡張された詳細カード表示 */}
           {selectedCountry && (
-            <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "#1e1e1e", border: "1px solid #333", textAlign: "center" }}>
-              <h3 style={{ fontSize: "26px", margin: "0 0 5px 0" }}>{selectedCountry.nameJa}</h3>
-              <p style={{ color: "#888", margin: "0 0 15px 0", fontSize: "14px" }}>{selectedCountry.name}</p>
+            <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "#1e1e1e", border: "1px solid #333", textAlign: "center", animation: "fadeIn 0.3s ease-in-out" }}>
+              <h3 style={{ fontSize: "28px", margin: "0 0 5px 0" }}>{selectedCountry.nameJa}</h3>
+              <p style={{ color: "#888", margin: "0 0 20px 0", fontSize: "14px" }}>{selectedCountry.name}</p>
               
               <img 
                 src={selectedCountry.flag} 
                 alt="国旗" 
-                style={{ width: "100%", maxHeight: "250px", objectFit: "contain", backgroundColor: "#f0f0f0", padding: "10px", borderRadius: "8px" }} 
+                style={{ width: "100%", maxHeight: "220px", objectFit: "contain", backgroundColor: "#f0f0f0", padding: "10px", borderRadius: "8px", marginBottom: "20px" }} 
               />
+
+              {/* 🏛️ 首都＆人口のインフォメーションボード */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left" }}>
+                <div style={{ background: "#2a2a2a", padding: "12px 15px", borderRadius: "8px", display: "flex", justifyContent: "between", alignItems: "center" }}>
+                  <span style={{ color: "#aaa", fontSize: "14px" }}>🏛️ 首都:</span>
+                  <strong style={{ color: "#ffc107", fontSize: "16px", marginLeft: "auto" }}>{selectedCountry.capital}</strong>
+                </div>
+                <div style={{ background: "#2a2a2a", padding: "12px 15px", borderRadius: "8px", display: "flex", justifyContent: "between", alignItems: "center" }}>
+                  <span style={{ color: "#aaa", fontSize: "14px" }}>👥 人口:</span>
+                  <strong style={{ color: "#28a745", fontSize: "16px", marginLeft: "auto" }}>{selectedCountry.population}</strong>
+                </div>
+              </div>
             </div>
           )}
         </div>
