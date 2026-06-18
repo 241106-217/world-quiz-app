@@ -6,10 +6,19 @@ function App() {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all')
+        // 💡 学校でブロックされるURLの代わりに、GitHub上の安全なバックアップデータから取得する！
+        const response = await fetch('https://raw.githubusercontent.com/mledoze/countries/master/countries.json')
         const data = await response.json()
-        setCountries(data)
-        console.log("取得データ:", data)
+        
+        // データの形を授業のAPI（restcountries）と同じ形式に変換してセット
+        const formattedData = data.map(c => ({
+          name: { common: c.name.common },
+          flags: { png: `https://flagcdn.com/w320/${c.cca2.toLowerCase()}.png` },
+          cca3: c.cca3
+        }))
+
+        setCountries(formattedData)
+        console.log("データ取得成功！", formattedData)
       } catch (error) {
         console.error("エラー:", error)
       }
@@ -20,8 +29,8 @@ function App() {
   return (
     <div style={{ padding: '20px' }}>
       <h1>🌍 世界の国々 探索＆クイズ</h1>
-      <h2>ステップ2：APIデータ取得テスト</h2>
-      <p>現在、APIから <strong>{countries.length}</strong> カ国のデータを読み込みました！</p>
+      <h2>ステップ2：ネットワーク回避・API取得テスト</h2>
+      <p>現在、安全なAPIルートから <strong>{countries.length}</strong> カ国のデータを読み込みました！</p>
     </div>
   )
 }
