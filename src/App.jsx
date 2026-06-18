@@ -6,9 +6,10 @@ function App() {
   const [choices, setChoices] = useState([]);
   const [result, setResult] = useState("");
   const [search, setSearch] = useState("");
-  
-  // 💡 どちらのページを表示するか管理するステート（初期値は検索ページ）
   const [page, setPage] = useState("search"); 
+
+  // 💡 検索ページで「今選択されている国」を保存するステート（最初は何も選択されていないので null）
+  const [selectedCountry, setSelectedCountry] = useState(null);
 
   useEffect(() => {
     fetchFlags();
@@ -47,8 +48,8 @@ function App() {
     setResult("");
   };
 
-  const checkAnswer = (selectedCountry) => {
-    if (selectedCountry === quiz.name) {
+  const checkAnswer = (selectedName) => {
+    if (selectedName === quiz.name) {
       setResult("⭕ 正解！");
     } else {
       setResult(`❌ 不正解！正解は ${quiz.name}`);
@@ -63,7 +64,7 @@ function App() {
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
       <h1>🌍 世界の国々 探索＆クイズ</h1>
 
-      {/* 💡 ページを切り替えるためのナビゲーションボタン */}
+      {/* ナビゲーションボタン */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
         <button 
           onClick={() => setPage("search")}
@@ -95,7 +96,7 @@ function App() {
 
       <hr />
 
-      {/* 💡 検索ページ（page === "search" の時だけ表示） */}
+      {/* 🔍 検索ページ */}
       {page === "search" && (
         <div>
           <h2>🔍 国名検索</h2>
@@ -112,15 +113,54 @@ function App() {
             }}
           />
           <p>検索結果：<strong>{filteredCountries.length}</strong> 件</p>
-          <ul>
-            {filteredCountries.slice(0, 10).map((country) => (
-              <li key={country.name}>{country.name}</li>
-            ))}
-          </ul>
+          
+          {/* 💡 左右（または上下）に並べるためのレイアウト */}
+          <div style={{ display: "flex", gap: "20px", marginTop: "15px" }}>
+            
+            {/* 左側：国名の一覧リスト */}
+            <ul style={{ flex: 1, margin: 0, paddingLeft: "20px", cursor: "pointer" }}>
+              {filteredCountries.slice(0, 10).map((country) => (
+                <li 
+                  key={country.name} 
+                  onClick={() => setSelectedCountry(country)} // 💡 クリックしたらその国をセット
+                  style={{ 
+                    padding: "5px 0", 
+                    color: selectedCountry?.name === country.name ? "#007bff" : "inherit",
+                    fontWeight: selectedCountry?.name === country.name ? "bold" : "normal"
+                  }}
+                >
+                  {country.name}
+                </li>
+              ))}
+            </ul>
+
+            {/* 右側：選択された国の詳細情報カード */}
+            <div style={{ flex: 1, padding: "15px", border: "1px solid #ccc", borderRadius: "8px", minHeight: "200px", backgroundColor: "#1e1e1e" }}>
+              {selectedCountry ? (
+                <div style={{ textAlign: "center" }}>
+                  <h3 style={{ margin: "0 0 10px 0" }}>{selectedCountry.name}</h3>
+                  <img 
+                    src={selectedCountry.flag} 
+                    alt={`${selectedCountry.name}の国旗`} 
+                    style={{ maxWidth: "100%", height: "100px", objectFit: "contain", backgroundColor: "#f0f0f0", padding: "5px", borderRadius: "4px" }} 
+                  />
+                  <p style={{ fontSize: "14px", color: "#aaa", marginTop: "10px" }}>
+                    ISOコード (2文字): <strong>{selectedCountry.iso2}</strong><br />
+                    ISOコード (3文字): <strong>{selectedCountry.iso3}</strong>
+                  </p>
+                </div>
+              ) : (
+                <p style={{ color: "#888", textAlign: "center", marginTop: "60px" }}>
+                  左のリストから<br />国名を選択してください
+                </p>
+              )}
+            </div>
+
+          </div>
         </div>
       )}
 
-      {/* 💡 クイズページ（page === "quiz" の時だけ表示） */}
+      {/* 🏳️ クイズページ */}
       {page === "quiz" && quiz && (
         <div>
           <h2>🏳️ 国旗クイズ</h2>
