@@ -26,7 +26,7 @@ const countryTranslation = {
   "laos": "ラオス", "latvia": "ラトビア", "lebanon": "レバノン", "lesotho": "レソト", "liberia": "リベリア", 
   "libya": "リビア", "liechtenstein": "リヒテンシュタイン", "lithuania": "リトアニア", "luxembourg": "ルクセンブルク", "macao": "マカオ", 
   "macedonia": "北マケドニア", "madagascar": "マダガスカル", "malawi": "マラウイ", "malaysia": "マレーシア", "maldives": "モルディブ", 
-  "mali": "マリ", "malta": "マルタ", "marshall islands", "マーシャル諸島", "martinique": "マルティニーク", "mauritania": "モーリタニア", 
+  "mali": "マリ", "malta": "マルタ", "marshall islands": "マーシャル諸島", "martinique": "マルティニーク", "mauritania": "モーリタニア", 
   "mauritius": "モーリシャス", "mexico": "メキシコ", "micronesia": "ミクロネシア", "moldova": "モルドバ", "monaco": "モナコ", 
   "mongolia": "モンゴル", "montserrat": "モントセラト", "morocco": "モロッコ", "mozambique": "モザンビーク", "myanmar": "ミャンマー", 
   "namibia": "ナミビア", "nauru": "ナウル", "nepal": "ネパール", "netherlands": "オランダ", "netherlands antilles": "オランダ領アンティル", 
