@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-// 💡 API(CountriesNow)の全222カ国の表記に完全対応した網羅版の日本語翻訳辞書
+// 💡 APIから飛んでくる可能性のある表記をすべてカバーした辞書
 const countryTranslation = {
   "afghanistan": "アフガニスタン", "albania": "アルバニア", "algeria": "アルジェリア", "andorra": "アンドラ", "angola": "アンゴラ",
   "anguilla": "アンギラ", "antigua and barbuda": "アンティグア・バーブーダ", "argentina": "アルゼンチン", "armenia": "アルメニア", "aruba": "アルバ",
@@ -21,7 +21,7 @@ const countryTranslation = {
   "guam": "グアム", "guatemala": "グアテマラ", "guinea": "ギニア", "guinea-bissau": "ギニアビサウ", "guyana": "ガイアナ", 
   "haiti": "ハイチ", "honduras": "ホンジュラス", "hong kong": "香港", "hungary": "ハンガリー", "iceland": "アイスランド", 
   "india": "インド", "indonesia": "インドネシア", "iran": "イラン", "iraq": "イラク", "ireland": "アイルランド", 
-  "israel": "イスラエル", "italy": "イタリア", "jamaica": "ジャマイカ", "japan": "日本", "jordan": "ヨルダン", 
+  "israel": "イスラエル", "italy": "イタリア", "isle of man": "マン島", "jamaica": "ジャマイカ", "japan": "日本", "jordan": "ヨルダン", 
   "kazakhstan": "カザフスタン", "kenya": "ケニア", "kiribati": "キリバス", "kuwait": "クウェート", "kyrgyzstan": "キルギス", 
   "laos": "ラオス", "latvia": "ラトビア", "lebanon": "レバノン", "lesotho": "レソト", "liberia": "リベリア", 
   "libya": "リビア", "liechtenstein": "リヒテンシュタイン", "lithuania": "リトアニア", "luxembourg": "ルクセンブルク", "macao": "マカオ", 
@@ -45,9 +45,26 @@ const countryTranslation = {
   "tanzania": "タンザニア", "thailand": "タイ", "togo": "トーゴ", "tokelau": "トケラウ", "tonga": "トンガ", 
   "trinidad and tobago": "トリニダード・トバゴ", "tunisia": "チュニジア", "turkey": "トルコ", "turkmenistan": "トルクメニスタン", "turks and caicos islands": "タークス・カイコス諸島", 
   "tuvalu": "ツバル", "uganda": "ウガンダ", "ukraine": "ウクライナ", "united arab emirates": "アラブ首長国連邦", "united kingdom": "イギリス", 
-  "united states of america": "アメリカ", "uruguay": "ウルグアイ", "uzbekistan": "ウズベキスタン", "vanuatu": "バヌアツ", "vatican": "バチカン", 
+  "united states of america": "アメリカ", "united states": "アメリカ", "uruguay": "ウルグアイ", "uzbekistan": "ウズベキスタン", "vanuatu": "バヌアツ", "vatican": "バチカン", 
   "venezuela": "ベネズエラ", "vietnam": "ベトナム", "wallis and futuna": "ウォリス・フツナ", "western sahara": "西サハラ", "yemen": "イエメン", 
   "zambia": "ザンビア", "zimbabwe": "ジンバブエ"
+};
+
+// 💡 どんな国名が来ても絶対に日本語に変換する安全機能
+const getJapaneseName = (englishName) => {
+  if (!englishName) return "不明な国";
+  const lower = englishName.toLowerCase().trim();
+  
+  // 1. 辞書に完全一致すればそれを返す
+  if (countryTranslation[lower]) return countryTranslation[lower];
+  
+  // 2. 「United States」などの部分一致を救済
+  if (lower.includes("united states")) return "アメリカ";
+  if (lower.includes("isle of man")) return "マン島";
+  if (lower.includes("united kingdom")) return "イギリス";
+  if (lower.includes("russia")) return "ロシア";
+  
+  return englishName; // 最悪のフォールバック
 };
 
 function App() {
@@ -73,18 +90,14 @@ function App() {
       const data = await response.json();
 
       const combinedData = data.data.map(country => {
-        const lowerName = country.name.toLowerCase().trim();
-        // 💡 完全に網羅した辞書から日本語名を取得。万が一無い場合のみ英語に。
-        const nameJa = countryTranslation[lowerName] || country.name; 
         return {
           ...country,
-          nameJa: nameJa
+          nameJa: getJapaneseName(country.name) // 💡 安全な変換関数を通す
         };
       });
 
       setFlags(combinedData);
       createQuiz(combinedData);
-      console.log("全データ完全日本語化成功", combinedData);
     } catch (error) {
       console.error("エラーが発生しました:", error);
     }
@@ -100,7 +113,12 @@ function App() {
     const wrongCountries = shuffle(
       flagData.filter((country) => country.name !== correctCountry.name)
     ).slice(0, 3);
-    const allChoices = shuffle([correctCountry, ...wrongCountries]);
+    
+    // 💡 選択肢に変わるタイミングでも確実に日本語名を再生成・保証する
+    const allChoices = shuffle([correctCountry, ...wrongCountries]).map(c => ({
+      ...c,
+      nameJa: getJapaneseName(c.name)
+    }));
 
     setQuiz(correctCountry);
     setChoices(allChoices);
@@ -124,7 +142,6 @@ function App() {
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto", color: "#fff", backgroundColor: "#121212", minHeight: "100vh" }}>
       <h1>🌍 世界の国々 探索＆クイズ</h1>
 
-      {/* タブナビゲーション */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
         <button 
           onClick={() => setPage("search")}
@@ -180,15 +197,13 @@ function App() {
           />
           <p>検索結果：<strong>{filteredCountries.length}</strong> 件（横にスライドできます ➔）</p>
           
-          {/* 横スライドカルーセル */}
           <div style={{ 
             display: "flex", 
             gap: "15px", 
             overflowX: "auto", 
             paddingBottom: "15px",
             marginBottom: "20px",
-            scrollBehavior: "smooth",
-            WebkitOverflowScrolling: "touch"
+            scrollBehavior: "smooth"
           }}>
             {filteredCountries.slice(0, 15).map((country) => (
               <div 
@@ -214,10 +229,8 @@ function App() {
                 </div>
               </div>
             ))}
-            {filteredCountries.length === 0 && <p style={{ color: "#888" }}>該当する国がありません</p>}
           </div>
 
-          {/* 選択した国の詳細 */}
           {selectedCountry && (
             <div style={{ padding: "20px", borderRadius: "12px", backgroundColor: "#1e1e1e", border: "1px solid #333", textAlign: "center" }}>
               <h3 style={{ fontSize: "26px", margin: "0 0 5px 0" }}>{selectedCountry.nameJa}</h3>
@@ -228,14 +241,6 @@ function App() {
                 alt="国旗" 
                 style={{ width: "100%", maxHeight: "250px", objectFit: "contain", backgroundColor: "#f0f0f0", padding: "10px", borderRadius: "8px" }} 
               />
-              <div style={{ marginTop: "15px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", fontSize: "14px", color: "#ccc" }}>
-                <div style={{ background: "#2a2a2a", padding: "10px", borderRadius: "6px" }}>
-                  コード(2文字): <strong style={{ color: "#007bff" }}>{selectedCountry.iso2}</strong>
-                </div>
-                <div style={{ background: "#2a2a2a", padding: "10px", borderRadius: "6px" }}>
-                  コード(3文字): <strong style={{ color: "#007bff" }}>{selectedCountry.iso3}</strong>
-                </div>
-              </div>
             </div>
           )}
         </div>
@@ -282,11 +287,6 @@ function App() {
           </button>
         </div>
       )}
-
-      <hr style={{ borderColor: "#333", marginTop: "30px" }} />
-      <p style={{ color: "#666", fontSize: "12px", textAlign: "center" }}>
-        現在、<strong>{flags.length}</strong> カ国のデータを読み込み済み。
-      </p>
     </div>
   );
 }
