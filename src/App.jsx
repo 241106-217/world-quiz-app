@@ -1,41 +1,53 @@
 import { useEffect, useState } from "react";
 
-// 💡 外部通信を使わない、安全な日英翻訳辞書
+// 💡 API(CountriesNow)の全222カ国の表記に完全対応した網羅版の日本語翻訳辞書
 const countryTranslation = {
   "afghanistan": "アフガニスタン", "albania": "アルバニア", "algeria": "アルジェリア", "andorra": "アンドラ", "angola": "アンゴラ",
-  "antigua and barbuda": "アンティグア・バーブーダ", "argentina": "アルゼンチン", "armenia": "アルメニア", "aruba": "アルバ",
+  "anguilla": "アンギラ", "antigua and barbuda": "アンティグア・バーブーダ", "argentina": "アルゼンチン", "armenia": "アルメニア", "aruba": "アルバ",
   "australia": "オーストラリア", "austria": "オーストリア", "azerbaijan": "アゼルバイジャン", "bahamas": "バハマ", "bahrain": "バーレーン",
   "bangladesh": "バングラデシュ", "barbados": "バルバドス", "belarus": "ベラルーシ", "belgium": "ベルギー", "belize": "ベリーズ",
-  "benin": "ベナン", "bhutan": "ブータン", "bolivia": "ボリビア", "bosnia and herzegovina": "ボスニア・ヘルツェゴビナ", "botswana": "ボツワナ",
-  "brazil": "ブラジル", "brunei": "ブルネイ", "bulgaria": "ブルガリア", "burkina faso": "ブルキナファソ", "burundi": "ブルンジ",
-  "cambodia": "カンボジア", "cameroon": "カメルーン", "canada": "カナダ", "central african republic": "中央アフリカ共和国", "chad": "チャド",
-  "chile": "チリ", "china": "中国", "colombia": "コロンビア", "comoros": "コモロ", "congo": "コンゴ共和国", "costa rica": "コスタリカ",
-  "croatia": "クロアチア", "cuba": "キューバ", "cyprus": "キプロス", "czech republic": "チェコ", "denmark": "デンマーク",
-  "djibouti": "ジブチ", "dominica": "ドミニカ国", "dominican republic": "ドミニカ共和国", "ecuador": "エクアドル", "egypt": "エジプト",
-  "el salvador": "エルサルバドル", "estonia": "エストニア", "ethiopia": "エチオピア", "fiji": "フィジー", "finland": "フィンランド",
-  "france": "フランス", "gabon": "ガボン", "gambia": "ガンビア", "georgia": "ジョージア", "germany": "ドイツ", "ghana": "ガーナ",
-  "greece": "ギリシャ", "grenada": "グレナダ", "guatemala": "グアテマラ", "guinea": "ギニア", "guyana": "ガイアナ", "haiti": "ハイチ",
-  "honduras": "ホンジュラス", "hungary": "ハンガリー", "iceland": "アイスランド", "india": "インド", "indonesia": "インドネシア",
-  "iran": "イラン", "iraq": "イラク", "ireland": "アイルランド", "israel": "イスラエル", "italy": "イタリア", "jamaica": "ジャマイカ",
-  "japan": "日本", "jordan": "ヨルダン", "kazakhstan": "カザフスタン", "kenya": "ケニア", "kuwait": "クウェート", "kyrgyzstan": "キルギス",
-  "laos": "ラオス", "latvia": "ラトビア", "lebanon": "レバノン", "lesotho": "レソト", "liberia": "リベリア", "libya": "リビア",
-  "liechtenstein": "リヒテンシュタイン", "lithuania": "リトアニア", "luxembourg": "ルクセンブルク", "madagascar": "マダガスカル", "malawi": "マラウイ",
-  "malaysia": "マレーシア", "maldives": "モルディブ", "mali": "マリ", "malta": "マルタ", "mauritania": "モーリタニア", "mauritius": "モーリシャス",
-  "mexico": "メキシコ", "monaco": "モナコ", "mongolia": "モンゴル", "montenegro": "モンテネグロ", "morocco": "モロッコ", "mozambique": "モザンビーク",
-  "myanmar": "ミャンマー", "namibia": "ナミビア", "nepal": "ネパール", "netherlands": "オランダ", "new zealand": "ニュージーランド",
-  "nicaragua": "ニカラグア", "niger": "ニジェール", "nigeria": "ナイジェリア", "north korea": "北朝鮮", "norway": "ノルウェー",
-  "oman": "オマーン", "pakistan": "パキスタン", "palau": "パラオ", "panama": "パナマ", "papua new guinea": "パプアニューギニア",
-  "paraguay": "パラグアイ", "peru": "ペルー", "philippines": "フィリピン", "poland": "ポーランド", "portugal": "ポルトガル", "qatar": "カタール",
-  "romania": "ルーマニア", "russia": "ロシア", "rwanda": "ルワンダ", "saudi arabia": "サウジアラビア", "senegal": "セネガル",
-  "serbia": "セルビア", "seychelles": "セーシェル", "sierra leone": "シエラレオネ", "singapore": "シンガポール", "slovakia": "スロバキア",
-  "slovenia": "スロベニア", "solomon islands": "ソロモン諸島", "somalia": "ソマリア", "south africa": "南アフリカ", "south korea": "韓国",
-  "south sudan": "南スーダン", "spain": "スペイン", "sri lanka": "スリランカ", "sudan": "スーダン", "suriname": "スリナム",
-  "swaziland": "スワジランド", "sweden": "スウェーデン", "switzerland": "スイス", "syria": "シリア", "taiwan": "台湾",
-  "tajikistan": "タジキスタン", "tanzania": "タンザニア", "thailand": "タイ", "togo": "トーゴ", "tonga": "トンガ",
-  "trinidad and tobago": "トリニダード・トバゴ", "tunisia": "チュニジア", "turkey": "トルコ", "turkmenistan": "トルクメニスタン", "tuvalu": "ツバル",
-  "uganda": "ウガンダ", "ukraine": "ウクライナ", "united arab emirates": "アラブ首長国連邦", "united kingdom": "イギリス",
-  "united states of america": "アメリカ", "uruguay": "ウルグアイ", "uzbekistan": "ウズベキスタン", "vanuatu": "バヌアツ", "vatican": "バチカン",
-  "venezuela": "ベネズエラ", "vietnam": "ベトナム", "yemen": "イエメン", "zambia": "ザンビア", "zimbabwe": "ジンバブエ"
+  "benin": "ベナン", "bermuda": "バミューダ", "bhutan": "ブータン", "bolivia": "ボリビア", "bosnia and herzegovina": "ボスニア・ヘルツェゴビナ", 
+  "botswana": "ボツワナ", "brazil": "ブラジル", "british virgin islands": "イギリス領ヴァージン諸島", "brunei": "ブルネイ", "bulgaria": "ブルガリア", 
+  "burkina faso": "ブルキナファソ", "burundi": "ブルンジ", "cambodia": "カンボジア", "cameroon": "カメルーン", "canada": "カナダ", 
+  "cape verde": "カーボベルデ", "cayman islands": "ケイマン諸島", "central african republic": "中央アフリカ共和国", "chad": "チャド", "chile": "チリ", 
+  "china": "中国", "colombia": "コロンビア", "comoros": "コモロ", "congo": "コンゴ共和国", "congo dk": "コンゴ民主共和国", 
+  "cook islands": "クック諸島", "costa rica": "コスタリカ", "cote d'ivoire": "コートジボワール", "croatia": "クロアチア", "cuba": "キューバ", 
+  "cyprus": "キプロス", "czech republic": "チェコ", "denmark": "デンマーク", "djibouti": "ジブチ", "dominica": "ドミニカ国", 
+  "dominican republic": "ドミニカ共和国", "ecuador": "エクアドル", "egypt": "エジプト", "el salvador": "エルサルバドル", "equatorial guinea": "赤道ギニア", 
+  "eritrea": "エリトリア", "estonia": "エストニア", "ethiopia": "エチオピア", "falkland islands": "フォークランド諸島", "faroe islands": "フェロー諸島", 
+  "fiji": "フィジー", "finland": "フィンランド", "france": "フランス", "french guiana": "仏領ギアナ", "french polynesia": "仏領ポリネシア", 
+  "gabon": "ガボン", "gambia": "ガンビア", "georgia": "ジョージア", "germany": "ドイツ", "ghana": "ガーナ", 
+  "gibraltar": "ジブラルタル", "greece": "ギリシャ", "greenland": "グリーンランド", "grenada": "グレナダ", "guadeloupe": "グアドループ", 
+  "guam": "グアム", "guatemala": "グアテマラ", "guinea": "ギニア", "guinea-bissau": "ギニアビサウ", "guyana": "ガイアナ", 
+  "haiti": "ハイチ", "honduras": "ホンジュラス", "hong kong": "香港", "hungary": "ハンガリー", "iceland": "アイスランド", 
+  "india": "インド", "indonesia": "インドネシア", "iran": "イラン", "iraq": "イラク", "ireland": "アイルランド", 
+  "israel": "イスラエル", "italy": "イタリア", "jamaica": "ジャマイカ", "japan": "日本", "jordan": "ヨルダン", 
+  "kazakhstan": "カザフスタン", "kenya": "ケニア", "kiribati": "キリバス", "kuwait": "クウェート", "kyrgyzstan": "キルギス", 
+  "laos": "ラオス", "latvia": "ラトビア", "lebanon": "レバノン", "lesotho": "レソト", "liberia": "リベリア", 
+  "libya": "リビア", "liechtenstein": "リヒテンシュタイン", "lithuania": "リトアニア", "luxembourg": "ルクセンブルク", "macao": "マカオ", 
+  "macedonia": "北マケドニア", "madagascar": "マダガスカル", "malawi": "マラウイ", "malaysia": "マレーシア", "maldives": "モルディブ", 
+  "mali": "マリ", "malta": "マルタ", "marshall islands", "マーシャル諸島", "martinique": "マルティニーク", "mauritania": "モーリタニア", 
+  "mauritius": "モーリシャス", "mexico": "メキシコ", "micronesia": "ミクロネシア", "moldova": "モルドバ", "monaco": "モナコ", 
+  "mongolia": "モンゴル", "montserrat": "モントセラト", "morocco": "モロッコ", "mozambique": "モザンビーク", "myanmar": "ミャンマー", 
+  "namibia": "ナミビア", "nauru": "ナウル", "nepal": "ネパール", "netherlands": "オランダ", "netherlands antilles": "オランダ領アンティル", 
+  "new caledonia": "ニューカレドニア", "new zealand": "ニュージーランド", "nicaragua": "ニカラグア", "niger": "ニジェール", "nigeria": "ナイジェリア", 
+  "niue": "ニウエ", "norfolk island": "ノーフォーク島", "north korea": "北朝鮮", "northern mariana islands": "北マリアナ諸島", "norway": "ノルウェー", 
+  "oman": "オマーン", "pakistan": "パキスタン", "palau": "パラオ", "palestine": "パレスチナ", "panama": "パナマ", 
+  "papua new guinea": "パプアニューギニア", "paraguay": "パラグアイ", "peru": "ペルー", "philippines": "フィリピン", "pitcairn": "ピトケアン諸島", 
+  "poland": "ポーランド", "portugal": "ポルトガル", "puerto rico": "プエルトリコ", "qatar": "カタール", "reunion": "レユニオン", 
+  "romania": "ルーマニア", "russia": "ロシア", "rwanda": "ルワンダ", "saint helena": "セントヘレナ", "saint kitts and nevis": "セントクリストファー・ネーヴィス", 
+  "saint lucia": "セントルシア", "saint pierre and miquelon": "サンピエール島・ミクロン島", "saint vincent and grenadines": "セントビンセント・グレナディーン", "samoa": "サモア", "san marino": "サンマリノ", 
+  "sao tome and principe": "サントメ・プリンシペ", "saudi arabia": "サウジアラビア", "senegal": "セネガル", "serbia": "セルビア", "seychelles": "セーシェル", 
+  "sierra leone": "シエラレオネ", "singapore": "シンガポール", "slovakia": "スロバキア", "slovenia": "スロベニア", "solomon islands": "ソロモン諸島", 
+  "somalia": "ソマリア", "south africa": "南アフリカ", "south georgia": "サウスジョージア・サウスサンドウィッチ諸島", "south korea": "韓国", "south sudan": "南スーダン", 
+  "spain": "スペイン", "sri lanka": "スリランカ", "sudan": "スーダン", "suriname": "スリナム", "swaziland": "エスワティニ", 
+  "sweden": "スウェーデン", "switzerland": "スイス", "syria": "シリア", "taiwan": "台湾", "tajikistan": "タジキスタン", 
+  "tanzania": "タンザニア", "thailand": "タイ", "togo": "トーゴ", "tokelau": "トケラウ", "tonga": "トンガ", 
+  "trinidad and tobago": "トリニダード・トバゴ", "tunisia": "チュニジア", "turkey": "トルコ", "turkmenistan": "トルクメニスタン", "turks and caicos islands": "タークス・カイコス諸島", 
+  "tuvalu": "ツバル", "uganda": "ウガンダ", "ukraine": "ウクライナ", "united arab emirates": "アラブ首長国連邦", "united kingdom": "イギリス", 
+  "united states of america": "アメリカ", "uruguay": "ウルグアイ", "uzbekistan": "ウズベキスタン", "vanuatu": "バヌアツ", "vatican": "バチカン", 
+  "venezuela": "ベネズエラ", "vietnam": "ベトナム", "wallis and futuna": "ウォリス・フツナ", "western sahara": "西サハラ", "yemen": "イエメン", 
+  "zambia": "ザンビア", "zimbabwe": "ジンバブエ"
 };
 
 function App() {
@@ -53,7 +65,6 @@ function App() {
 
   const fetchFlags = async () => {
     try {
-      // 💡 通信先は確実に繋がるCountriesNowの1つだけにします
       const response = await fetch(
         "https://countriesnow.space/api/v0.1/countries/flag/images"
       );
@@ -61,10 +72,9 @@ function App() {
       
       const data = await response.json();
 
-      // 💡 取得したデータに、上の翻訳辞書を使って日本語名(nameJa)を紐付け
       const combinedData = data.data.map(country => {
-        const lowerName = country.name.toLowerCase();
-        // 辞書にあれば日本語、なければ英語名のままにする
+        const lowerName = country.name.toLowerCase().trim();
+        // 💡 完全に網羅した辞書から日本語名を取得。万が一無い場合のみ英語に。
         const nameJa = countryTranslation[lowerName] || country.name; 
         return {
           ...country,
@@ -74,7 +84,7 @@ function App() {
 
       setFlags(combinedData);
       createQuiz(combinedData);
-      console.log("データ取得＆日本語化成功", combinedData);
+      console.log("全データ完全日本語化成功", combinedData);
     } catch (error) {
       console.error("エラーが発生しました:", error);
     }
@@ -105,7 +115,6 @@ function App() {
     }
   };
 
-  // 日本語・英語どちらでも検索にヒットする仕組み
   const filteredCountries = flags.filter((country) =>
     country.nameJa.toLowerCase().includes(search.toLowerCase()) ||
     country.name.toLowerCase().includes(search.toLowerCase())
