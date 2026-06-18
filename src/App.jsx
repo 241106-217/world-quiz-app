@@ -7,7 +7,9 @@ function App() {
     const fetchCountries = async () => {
       try {
         // 1. APIからデータを取得
-        const response = await fetch('https://restcountries.com/v3.1/all')
+        const response = await fetch(
+  'https://restcountries.com/v3.1/all?fields=name,cca3'
+)
         if (!response.ok) throw new Error('通信エラーが発生しました')
         
         const data = await response.json()
